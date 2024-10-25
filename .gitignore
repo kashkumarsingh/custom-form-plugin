@@ -1,0 +1,45 @@
+# Ignore Composer dependencies
+/vendor/
+
+# Ignore Node.js dependencies
+/node_modules/
+
+# Ignore build directories
+/dist/
+/assets/css/style.css
+/assets/js/scripts.js
+
+# Ignore WordPress core files
+/wp-config.php
+/wp-content/uploads/
+
+# Ignore local configuration files
+*.local
+*.env
+
+# Ignore IDE files
+.idea/
+/.vscode/
+/*.sublime-project
+/*.sublime-workspace
+
+# Ignore temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore PHPStorm files
+/.idea/
+
+# Ignore built files
+/assets/src/
+*.min.js
+*.min.css
+
+# Ignore WordPress specific files
+wp-content/plugins/custom-form-plugin/.gitkeep
