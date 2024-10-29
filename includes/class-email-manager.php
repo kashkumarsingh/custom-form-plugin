@@ -19,6 +19,12 @@ if (!defined('ABSPATH')) {
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+    require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+    require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+    require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+}
+
 class CFP_Email_Manager
 {
     private $options;
@@ -30,13 +36,6 @@ class CFP_Email_Manager
     {
         // Fetch plugin options for email settings
         $this->options = get_option('cfp_plugin_options');
-
-        // Ensure PHPMailer is available from WordPress core
-        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
-            require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
-            require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
-        }
     }
 
     /**
@@ -49,24 +48,34 @@ class CFP_Email_Manager
      */
     public function send_email($to, $subject, $message)
     {
-        $mail = new PHPMailer(true); // Enable exceptions in PHPMailer
-
+        if (empty($message)) {
+            error_log('Message body is empty. Email not sent.');
+            return false; // or handle the error as needed
+        }
+    
+        $mail = new PHPMailer(true); // Use PHPMailer from WordPress
+    
         try {
-            // SMTP configuration
             $mail->isSMTP();
-            $mail->Host       = $this->options['smtp_host'];
-            $mail->SMTPAuth   = false;
-            $mail->Username   = $this->options['smtp_user'];
-            $mail->Password   = $this->options['smtp_pass'];
-           // $mail->SMTPSecure = $this->options['smtp_encryption']; // 'tls' or 'ssl'
-            $mail->Port       = $this->options['smtp_port'];
-
-            // Email content
-            $mail->setFrom($this->options['email_recipient']);
-            $mail->addAddress($to); // Add recipient
+            $mail->Host = $this->options['smtp_host'] ?? 'localhost';
+            $mail->SMTPAuth = true;
+            $mail->Username = $this->options['smtp_user'] ?? ''; // SMTP username
+            $mail->Password = $this->options['smtp_pass'] ?? ''; // SMTP password
+            $mail->SMTPSecure = $this->options['smtp_encryption'] ?? ''; // 'tls' or 'ssl'
+            $mail->Port = $this->options['smtp_port'] ?? 25;
+    
+            // Recipients
+            $mail->setFrom(
+                $this->options['email_from_address'] ?? 'no-reply@meraboiler.com',
+                $this->options['email_from_name'] ?? 'Meraboiler'
+            );
+            $mail->addAddress($to); //now ask him to submit again
+    
+            // Set email format to HTML
+            $mail->isHTML(true);
             $mail->Subject = $subject;
-            $mail->Body    = $message;
-
+            $mail->Body = $message; // This needs to be a non-empty string
+    
             // Attempt to send the email
             return $mail->send();
         } catch (Exception $e) {
@@ -75,6 +84,7 @@ class CFP_Email_Manager
             return false;
         }
     }
+    
 
     /**
      * Get the current SMTP options.
